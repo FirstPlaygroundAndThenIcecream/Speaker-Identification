@@ -181,3 +181,5 @@ geckodriver.log
 *.code-workspace
 .history
 .vscode
+
+rene experimental/parselmouth
