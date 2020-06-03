@@ -183,3 +183,7 @@ geckodriver.log
 .vscode
 
 rene experimental/parselmouth
+
+segments/
+
+audibles_re/
