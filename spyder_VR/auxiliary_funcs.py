@@ -2,13 +2,14 @@
 """
 Created on Mon Jun  8 11:12:45 2020
 
-@author: Lei Xian
 """
 
 import pandas as pd
 import numpy as np
+import math
 import csv
 import os
+from pydub import AudioSegment
 
 
 def envelope(y, rate, threshold):
@@ -43,3 +44,18 @@ def save_csv(file_name, files):
                 csv_writer.writerow({'fname': fname, 'label': label})
         else:
             print("nothing to write to csv.")
+
+
+def trim_audio(audio_path, dest_folder):
+    signal = AudioSegment.from_file(audio_path)
+    length = len(signal)
+    segm_qty = 5 
+    segm_len = math.floor(length/segm_qty)
+#    segm_len = 200
+#    segm_qty = math.floor(length/segm_len)
+    for i in range(segm_qty):
+        audio_name = f"{i}_{os.path.split(audio_path)[1]}"
+        export_path = os.path.join(dest_folder, audio_name)
+        signal_segm = signal[segm_len*i : segm_len*(i+1)]
+        signal_segm.export(out_f=export_path, format='wav')
+        print(export_path)

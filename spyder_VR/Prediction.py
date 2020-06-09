@@ -2,7 +2,6 @@
 """
 Created on Mon Jun  8 14:21:46 2020
 
-@author: Lei Xian
 """
 
 import os
@@ -52,10 +51,10 @@ def build_predictions(audio_dir):
 
 folderMap = FolderMap.FolderMap()
 
-df = pd.read_csv('0_speak.csv')
+df = pd.read_csv('audibles.csv')
 classes = list(np.unique(df.label))
 fn2class = dict(zip(df.fname, df.label))
-p_path = os.path.join('pickles', 'conv.p')
+p_path = os.path.join('pickles_au', 'conv.p')
 
 
 with open(p_path, 'rb') as handle:
@@ -66,7 +65,7 @@ print(config.model_path)
 model = load_model(config.model_path)
 
 
-y_true, y_pred, fn_prob = build_predictions(f'{folderMap.RAW_DATA}/')
+y_true, y_pred, fn_prob = build_predictions(f'{folderMap.RESAMPLE_FOLDER}/')
 acc_score = accuracy_score(y_true=y_true, y_pred=y_pred)
 print(acc_score)
 

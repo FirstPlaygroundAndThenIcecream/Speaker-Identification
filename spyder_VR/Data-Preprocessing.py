@@ -2,7 +2,6 @@
 """
 Created on Mon Jun  8 10:22:33 2020
 
-@author: Lei Xian
 """
 
 import os
@@ -20,10 +19,15 @@ import plot_funcs
 import auxiliary_funcs
 import FolderMap
 
+
 folderMap = FolderMap.FolderMap()
-
 raw_data = folderMap.RAW_DATA 
+label_csv = 'audibles.csv'
+to_chunks = True
+to_resample = False
+ 
 
+## fetch data from raw data folder
 def fetch_data(folder_path=raw_data): 
     audios = []
     for audio in os.listdir(folder_path):
@@ -31,11 +35,13 @@ def fetch_data(folder_path=raw_data):
             audios.append(os.path.join(folder_path, audio))
     return audios
 
+
 audibles = fetch_data()
 print(audibles)
 
 
-def get_audios_stats(audios):
+## check if sample rate and channels are the same, otherwise print the file names
+def get_audios_stats(audios, channels, sr):
     print(f"found {len(audios)} files.\n")
     for audio in audios:
         signal = AudioSegment.from_file(audio)  
@@ -44,13 +50,24 @@ def get_audios_stats(audios):
         sample_width = signal.sample_width
         length_ms = len(signal)
         frame_width = signal.frame_width
-        if channels != 1 or sample_rate != 8000:
+        if channels != channels or sample_rate != sr:
             print(f'{audio}\nchannels: {channels}, sample_rate: {sample_rate}, \
             \nsample_width: {sample_width}, length: {length_ms}, frame_width: {frame_width}\n')
-        
-get_audios_stats(audibles)  
 
-auxiliary_funcs.save_csv('0_speak.csv', audibles)
+        
+get_audios_stats(audibles, 1, 44100)  
+
+
+if to_chunks:
+    for audio in audibles:
+        auxiliary_funcs.trim_audio(audio, folderMap.RESAMPLE_FOLDER)
+
+
+audibles_re = fetch_data(folderMap.RESAMPLE_FOLDER) 
+
+
+## generate labels for the dataset
+auxiliary_funcs.save_csv(label_csv, audibles_re)
 
 
 def plot_audio_frames(file):
@@ -67,16 +84,15 @@ def plot_audio_frames(file):
     plt.plot(data[:frame], '.'); 
     plt.plot(data[:frame], '-');
 
-plot_audio_frames(audibles[1])
+plot_audio_frames(audibles_re[1])
 
 
-df = pd.read_csv('0_speak.csv')
+df = pd.read_csv(label_csv)
 df.set_index('fname', inplace=True)
 
 for f in df.index:
-    fname = os.path.join(folderMap.RAW_DATA, f)
+    fname = os.path.join(folderMap.RESAMPLE_FOLDER, f)
     rate, samples = wavfile.read(fname)
-    print()
     df.at[f, 'length'] = samples.shape[0]/rate
 
 labels = list(np.unique(df.label))
@@ -94,17 +110,15 @@ signals, fft, fbank, mfccs = {}, {}, {}, {}
 
 df.reset_index(inplace=True)
 
-resample = False
-
 
 ## applying mask to filter away the high freq
 ## fill dicts each with a signle wavfile signal
 for label in labels:
     wav_file = df[df.label == label].iloc[0, 0] 
-    print('wavfiles/' + wav_file)
-    signal, rate = librosa.load('wavfiles/'+wav_file, sr=44100)
+    print(f'{folderMap.RESAMPLE_FOLDER}/{wav_file}')
+    signal, rate = librosa.load(f'{folderMap.RESAMPLE_FOLDER}/{wav_file}', sr=44100)
 
-    if resample:
+    if to_resample:
         print(signal)
         mask = envelope(signal, rate, 0.0005)
         print(f"mask: {mask[:10]}")
@@ -132,7 +146,7 @@ plot_funcs.plot_mfccs(mfccs)
 plt.show()
 
 
-if resample:
+if to_resample:
     resample_folder = folderMap.RESAMPLES
     
     if os.path.exists(resample_folder):

@@ -2,7 +2,6 @@
 """
 Created on Mon Jun  8 12:51:28 2020
 
-@author: Lei Xian
 """
 
 import os
@@ -38,13 +37,14 @@ def build_rand_feat():
     if tmp:
         return tmp.data[0], tmp.data[1]
     
-    X = []
-    y = []
+    X, y = [], []
+    
     _min, _max = float('inf'), -float('inf')
+    
     for _ in tqdm(range(n_samples)):
         rand_class = np.random.choice(class_dist.index, p=prob_dist)
         file = np.random.choice(df[df.label==rand_class].index)
-        rate, wav = wavfile.read(f'{folderMap.RAW_DATA}/{file}')
+        rate, wav = wavfile.read(f'{use_data}/{file}')
         label = df.at[file, 'label']
         rand_index = np.random.randint(0, wav.shape[0]-config.step)
         sample = wav[rand_index:rand_index+config.step]
@@ -64,7 +64,7 @@ def build_rand_feat():
         X = X.reshape(X.shape[0], X.shape[1], X.shape[2], 1)
     elif config.mode == 'time':
         X = X.reshape(X.shape[0], X.shape[1], X.shape[2])
-    y = to_categorical(y, num_classes=10)
+    y = to_categorical(y, num_classes=12)
     config.data = (X, y)
     
     #save the train data
@@ -89,7 +89,7 @@ def get_conv_model():
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(10, activation='softmax'))
+    model.add(Dense(12, activation='softmax'))
     model.summary()
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
@@ -108,7 +108,7 @@ def get_recurrent_model():
     model.add(TimeDistributed(Dense(16, activation='relu')))
     model.add(TimeDistributed(Dense(8, activation='relu')))
     model.add(Flatten())
-    model.add(Dense(10, activation='softmax'))
+    model.add(Dense(12, activation='softmax'))
     model.summary()
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
@@ -117,13 +117,16 @@ def get_recurrent_model():
     
  
 folderMap = FolderMap.FolderMap()
+raw_data = folderMap.RAW_DATA 
+use_data = folderMap.RESAMPLE_FOLDER
+label_csv = 'audibles.csv'
     
-df = pd.read_csv('0_speak.csv')
+df = pd.read_csv(label_csv)
 df.set_index('fname', inplace=True)
 
 
 for f in df.index:
-    rate, signal = wavfile.read(f'{folderMap.RAW_DATA}/{f}')
+    rate, signal = wavfile.read(f'{use_data}/{f}')
     df.at[f, 'length'] = signal.shape[0]/rate
 
 
