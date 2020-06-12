@@ -23,7 +23,7 @@ import FolderMap
 folderMap = FolderMap.FolderMap()
 raw_data = folderMap.RAW_DATA 
 label_csv = 'audibles.csv'
-to_chunks = True
+to_chunks = False
 to_resample = False
  
 
@@ -60,31 +60,29 @@ get_audios_stats(audibles, 1, 44100)
 
 if to_chunks:
     for audio in audibles:
-        auxiliary_funcs.trim_audio(audio, folderMap.RESAMPLE_FOLDER)
+        auxiliary_funcs.trim_export_audio(audio, folderMap.RESAMPLE_FOLDER)
 
 
 audibles_re = fetch_data(folderMap.RESAMPLE_FOLDER) 
 
 
 ## generate labels for the dataset
-auxiliary_funcs.save_csv(label_csv, audibles_re)
+#auxiliary_funcs.save_csv(label_csv, audibles_re)
 
 
 def plot_audio_frames(file):
     print(f"file: {file}")
     rate, data = wavfile.read(file)
     print(data.shape)
-    plt.title(f"{os.path.split(file)[1]}: whole length")
+    plt.title(f"{os.path.split(file)[1]}: full length")
     plt.plot(data, '-')
     
-    #plt.title("{file}: {frame} frames")
-
     frame = 100
     plt.figure(figsize=(16, 4))
     plt.plot(data[:frame], '.'); 
     plt.plot(data[:frame], '-');
 
-plot_audio_frames(audibles_re[1])
+plot_audio_frames("../audibles/Dorothy.wav")
 
 
 df = pd.read_csv(label_csv)

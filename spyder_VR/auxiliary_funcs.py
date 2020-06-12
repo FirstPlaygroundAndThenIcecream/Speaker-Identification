@@ -46,7 +46,7 @@ def save_csv(file_name, files):
             print("nothing to write to csv.")
 
 
-def trim_audio(audio_path, dest_folder):
+def trim_export_audio(audio_path, dest_folder):
     signal = AudioSegment.from_file(audio_path)
     length = len(signal)
     segm_qty = 5 

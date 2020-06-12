@@ -49,7 +49,7 @@ def build_rand_feat():
         rand_index = np.random.randint(0, wav.shape[0]-config.step)
         sample = wav[rand_index:rand_index+config.step]
         X_sample = mfcc(sample, rate,
-                        numcep=config.nfeat, nfilt=config.nfilt, nfft=config.nfft)
+                        numcep=config.nfeat, nfilt=config.nfilt, nfft=config.nfft).T
         _min = min(np.amin(X_sample), _min)
         _max = max(np.amax(X_sample), _max)
         X.append(X_sample)
@@ -76,16 +76,20 @@ def build_rand_feat():
     
 def get_conv_model():
     model = Sequential()
-    model.add(Conv2D(16, (3, 3), activation='relu', strides=(1, 1),
-                     padding='same', input_shape=input_shape))
-    model.add(Conv2D(32, (3, 3), activation='relu', strides=(1, 1),
-                     padding='same'))
-    model.add(Conv2D(64, (3, 3), activation='relu', strides=(1, 1),
-                     padding='same'))
-    model.add(Conv2D(128, (3, 3), activation='relu', strides=(1, 1),
-                     padding='same'))
+    
+    #convolutional layers
+    #hyperparameters: strids, padding
+    # (3,3) is the common dimensions of the kernel 
+    model.add(Conv2D(16, (3, 3), padding='same', activation='relu', strides=(1, 1), 
+                     input_shape=input_shape))
+    model.add(Conv2D(32, (3, 3), padding='same', activation='relu', strides=(1, 1)))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', strides=(1, 1)))
+    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', strides=(1, 1)))
+    # pooling is to reduce number of parameters. In keras it is implemented as a layer. 2x2 is the most common size
     model.add(MaxPool2D((2, 2)))
+    # to reduce overfitting 
     model.add(Dropout(0.5))
+    # flatten is to flatten input before applying the dense layers
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dense(64, activation='relu'))
